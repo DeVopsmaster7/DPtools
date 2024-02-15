@@ -1,3 +1,7 @@
+install docker before insatll K8
+
+sudo apt install docker.io
+
 sudo apt update
 sudo apt upgrade -y
 sudo apt install -y curl apt-transport-https ca-certificates software-properties-common
