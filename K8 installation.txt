@@ -13,3 +13,22 @@ sudo apt-get install -y kubelet kubeadm kubectl
 
 sudo nano install.sh
 sudo bash install.sh
+
+after the installation goto master 
+----------------------------------
+kubeadm init (this will generate the join token command which needs to be executed on the worker node)
+sudo kubeadm init 
+after the initialized
+
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+
+after run this commands on the Slave nodes
+------------------------------------------
+sudo kubeadm join 172.31.89.111:6443 --token 31el0m.tsrbhr02l5o5pj8v \
+        --discovery-token-ca-cert-hash sha256:188bfadfcb931e7ad41ef0fbc76d77b3391819613d82011ef0b991ce3529e861
+
+
