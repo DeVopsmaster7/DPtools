@@ -23,6 +23,6 @@ Slave1 ansible_host= private ip of slave nodes
 
 cd
 
-ansible -m ping -all
+ansible -m ping all
 
 
