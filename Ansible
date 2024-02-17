@@ -25,4 +25,10 @@ cd
 
 ansible -m ping all
 
+ansible-playbook play1.yaml --syntax-check
+
+ansible-playbook play1.yaml --check (to check whether runs without a failure)
+
+ansible-playbook play1.yaml (run the playbook)
+
 
