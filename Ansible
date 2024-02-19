@@ -17,15 +17,21 @@ sudo nano .ssh/authorized_keys
 
 paste it in the nano file save and exit. (repeat the task for other slave node you have.)
 
-goto Master cd /etc/ansible/
+goto Master cd /etc/ansible/hosts
 ls
 sudo nano hosts
 clear everything in that file and type:
-Slave1 ansible_host= private ip of slave nodes
+Slave1 ansible_host= private ip of slave nodes for example
+
+[test]
+Slave1 ansible_host=172.31.80.220
+Slave2 ansible_host=172.31.81.91
 
 cd
 
 ansible -m ping all
+
+sudo nano play1.yaml
 
 ansible-playbook play1.yaml --syntax-check
 
