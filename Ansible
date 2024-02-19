@@ -39,4 +39,35 @@ ansible-playbook play1.yaml --check (to check whether runs without a failure)
 
 ansible-playbook play1.yaml (run the playbook)
 
+Ansible roles
+-------------
+cd /etc/ansible/
+ls
+cd roles
+/etc/ansible/roles
+
+sudo ansible-galaxy init apache2
+
+role will get created successfully with the package name
+
+cd apache2
+ls
+cd tasks
+ls
+main.yml
+
+create a file
+---
+- name: installing apache2
+  apt: name=apache2 state=latest save and exit
+
+ls
+create a one more file to intsall to prev file in it
+
+- include_tasks: file_name save and exit
+
+cd
+$ normal user
+
+
 
