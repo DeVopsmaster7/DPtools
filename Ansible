@@ -7,13 +7,21 @@ $ sudo apt install ansible -y
 
 ssh-keygen
 
-cd /home/ubuntu/.ssh/
+cd .ssh/
 
-cat id-rsa.gen
+ls
+
+authorized_keys  id_rsa  id_rsa.pub
+
+cat id_rsa.gen
 
 copy the public key and go to slave node type
 
-sudo nano .ssh/authorized_keys
+ cd.ssh/
+ls
+authorized_keys
+
+create a file sudo nano authorized_keys
 
 paste it in the nano file save and exit. (repeat the task for other slave node you have.)
 
