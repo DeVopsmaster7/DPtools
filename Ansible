@@ -40,6 +40,14 @@ cd
 ansible -m ping all
 
 sudo nano play1.yaml
+---
+- name: Installing softwares on machine1
+  hosts: localhost
+  become: true
+  tasks:
+  - name: Install Jenkins, Java and Docker
+    script: master.sh
+
 
 ansible-playbook play1.yaml --syntax-check
 
