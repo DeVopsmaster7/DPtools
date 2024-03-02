@@ -112,3 +112,25 @@ access_key = ""
  sudo apt install apache2-y
  sudo su
  echo "Custom html page" > /var/www/html/index.html
+--------------------------------------------------------------------------------------------------------------------------------------
+ provider "aws" {
+ access_key = ""
+ secret_key = ""
+ region = "us-east-1"
+ }
+ resource "aws_instance" "k8master" {
+ ami ="ami-0cd59ecaf368e5ccf"
+ instance_type ="t2.medium"
+ key_name ="Assignment key pair"
+ tags = {
+ Name="k8-m"
+ }
+ }
+ resource "aws_instance" "k8slave" {
+ ami ="ami-0cd59ecaf368e5ccf"
+ instance_type ="t2.micro"
+ key_name ="Assignment key pair"
+ tags = {
+ Name="k8-s"
+ }
+ }
