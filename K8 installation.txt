@@ -1,7 +1,7 @@
 Ubuntu 20.04 AMi T2.medium
 install docker before insatll K8
 
-sudo apt install docker.io -y
+sudo apt-get install docker.io -y
 
 sudo nano install.sh
 
