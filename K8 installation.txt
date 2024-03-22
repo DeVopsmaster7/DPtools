@@ -3,7 +3,7 @@ install docker before insatll K8
 
 sudo apt-get install docker.io -y
 
-sudo nano install.sh
+sudo nano a.sh
 
 sudo apt update
 sudo apt upgrade -y
@@ -14,7 +14,7 @@ sudo swapoff -a
 sudo apt update
 sudo apt install -y kubelet kubeadm kubectl
 
-sudo bash install.sh
+sudo bash a.sh
 
 after the installation goto master 
 ----------------------------------
