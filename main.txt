@@ -1,3 +1,5 @@
+main.tf file
+
 provider "aws" {
   region = "us-east-1"
   access_key = ""
@@ -113,6 +115,8 @@ access_key = ""
  sudo su
  echo "Custom html page" > /var/www/html/index.html
 --------------------------------------------------------------------------------------------------------------------------------------
+ main.tf
+
  provider "aws" {
  access_key = ""
  secret_key = ""
