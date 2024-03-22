@@ -25,7 +25,7 @@ create a file sudo nano authorized_keys
 
 paste it in the nano file save and exit. (repeat the task for other slave node you have.)
 
-goto Master cd /etc/ansible/hosts
+goto Master cd /etc/ansible
 ls
 sudo nano hosts
 clear everything in that file and type:
