@@ -48,6 +48,7 @@ sudo nano play1.yaml
   - name: Install Jenkins, Java and Docker
     script: master.sh
 
+sudo nano master.sh
 
 ansible-playbook play1.yaml --syntax-check
 
