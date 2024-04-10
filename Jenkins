@@ -8,3 +8,15 @@ sudo apt-get install jenkins
 
 /home/ubuntu/jenkins
 
+
+
+-----------------------------------------------------------------------------------------
+
+Dockerfile
+
+From ubuntu
+RUN apt update
+RUN apt install apache2 -y
+ADD . /var/www/html/
+ENTRYPOINT apachectl -D FOREGROUND
+
