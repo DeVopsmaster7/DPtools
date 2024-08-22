@@ -50,7 +50,7 @@ sudo nano play1.yaml
 
 sudo nano master.sh
 
-sudo apt install openjdk-11-jdk -y
+sudo apt install openjdk-17-jdk -y
 sudo apt install docker.io -y
 
 ansible-playbook play1.yaml --syntax-check
