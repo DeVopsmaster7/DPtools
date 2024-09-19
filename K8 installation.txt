@@ -1,8 +1,31 @@
-sudo nano a.sh
+**************************
+UBUNTU-->22.04
+Instance --> t2.medium
 
-sudo apt update
+============================================================RUN THIS ON ALL THE MACHINES(Master & Slave)==========================================================================
+
+++++++++++++++++++++++++++++++++++++++++++++++++RUN=====sudo su=====on both the machine before executing any command++++++++++++++++++++++++++++++++++++++++++++++
+
+#!/bin/bash
+set -euxo pipefail
+
+# Kuernetes Variable Declaration
+
+KUBERNETES_VERSION="1.29.0-1.1"
+
 # disable swap
 sudo swapoff -a
+
+# keeps the swaf off during reboot
+(crontab -l 2>/dev/null; echo "@reboot /sbin/swapoff -a") | crontab - || true
+sudo apt-get update -y
+
+
+# Install CRI-O Runtime
+
+OS="xUbuntu_22.04"
+
+VERSION="1.28"
 
 # Create the .conf file to load the modules at bootup
 cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
@@ -23,87 +46,112 @@ EOF
 # Apply sysctl params without reboot
 sudo sysctl --system
 
-## Install CRIO Runtime
-sudo apt-get update -y
-sudo apt-get install -y software-properties-common curl apt-transport-https ca-certificates gpg
+cat <<EOF | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/ /
+EOF
+cat <<EOF | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:$VERSION.list
+deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/$VERSION/$OS/ /
+EOF
 
-sudo curl -fsSL https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
-echo "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://pkgs.k8s.io/addons:/cri-o:/prerelease:/main/deb/ /" | sudo tee /etc/apt/sources.list.d/cri-o.list
+curl -L https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:$VERSION/$OS/Release.key | sudo apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
+curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/$OS/Release.key | sudo apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -
 
-sudo apt-get update -y
-sudo apt-get install -y cri-o
+sudo apt-get update
+sudo apt-get install cri-o cri-o-runc -y
 
 sudo systemctl daemon-reload
 sudo systemctl enable crio --now
-sudo systemctl start crio.service
 
-echo "CRI runtime installed successfully"
+echo "CRI runtime installed susccessfully"
 
-# Add Kubernetes APT repository and install required packages
-curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+# Install kubelet, kubectl and Kubeadm
 
 sudo apt-get update -y
-sudo apt-get install -y kubelet="1.29.0-*" kubectl="1.29.0-*" kubeadm="1.29.0-*"
+sudo apt-get install -y apt-transport-https ca-certificates curl gpg
+
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-1-28-apt-keyring.gpg
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-1-28-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes-1.28.list
+
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-1-29-apt-keyring.gpg
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-1-29-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes-1.29.list
+
 sudo apt-get update -y
+sudo apt-get install -y kubelet="$KUBERNETES_VERSION" kubectl="$KUBERNETES_VERSION" kubeadm="$KUBERNETES_VERSION"
+sudo apt-get update -y
+sudo apt-mark hold kubelet kubeadm kubectl
+
 sudo apt-get install -y jq
 
-sudo systemctl enable --now kubelet
-sudo systemctl start kubelet
+local_ip="$(ip --json addr show eth0 | jq -r '.[0].addr_info[] | select(.family == "inet") | .local')"
+cat > /etc/default/kubelet << EOF
+KUBELET_EXTRA_ARGS=--node-ip=$local_ip
+EOF
 
-sudo bash a.sh
 
-after the installation goto master 
-----------------------------------
-## Execute ONLY on "Master Node"
 
+============================================================RUN THIS ON THE MASTER MACHINE=================================================================
+
+#!/bin/bash
+# Setup for Control Plane (Master) servers
+
+set -euxo pipefail
+
+# If you need public access to API server using the servers Public IP adress, change PUBLIC_IP_ACCESS to true.
+
+PUBLIC_IP_ACCESS="true"
+NODENAME=$(hostname -s)
+POD_CIDR="192.168.0.0/16"
+
+# Pull required images
 
 sudo kubeadm config images pull
 
-sudo kubeadm init
+# Initialize kubeadm based on PUBLIC_IP_ACCESS
 
+if [[ "$PUBLIC_IP_ACCESS" == "false" ]]; then
+    
+    MASTER_PRIVATE_IP=$(ip addr show eth0 | awk '/inet / {print $2}' | cut -d/ -f1)
+    sudo kubeadm init --apiserver-advertise-address="$MASTER_PRIVATE_IP" --apiserver-cert-extra-sans="$MASTER_PRIVATE_IP" --pod-network-cidr="$POD_CIDR" --node-name "$NODENAME" --ignore-preflight-errors Swap
 
-mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
+elif [[ "$PUBLIC_IP_ACCESS" == "true" ]]; then
 
-# Network Plugin = calico
+    MASTER_PUBLIC_IP=$(curl ifconfig.me && echo "")
+    sudo kubeadm init --control-plane-endpoint="$MASTER_PUBLIC_IP" --apiserver-cert-extra-sans="$MASTER_PUBLIC_IP" --pod-network-cidr="$POD_CIDR" --node-name "$NODENAME" --ignore-preflight-errors Swap
 
-kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.0/manifests/calico.yaml
+else
+    echo "Error: MASTER_PUBLIC_IP has an invalid value: $PUBLIC_IP_ACCESS"
+    exit 1
+fi
 
-kubeadm token create --print-join-command
-```
+# Configure kubeconfig
 
-- You will get `kubeadm token`, **Copy it**.
+mkdir -p "$HOME"/.kube
+sudo cp -i /etc/kubernetes/admin.conf "$HOME"/.kube/config
+sudo chown "$(id -u)":"$(id -g)" "$HOME"/.kube/config
 
-after run this commands on the Slave nodes
-------------------------------------------
-## Execute on ALL of your Worker Node's
+# Install Claico Network Plugin Network 
+
+kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+
+=========================================================================================================================================================================
+Execute on ALL of your Worker Node's
 
 1. Perform pre-flight checks
 
 
-   sudo kubeadm reset pre-flight checks
+sudo kubeadm reset pre-flight checks
 
 
 2. Paste the join command you got from the master node and append `--v=5` at the end but first use sudo su command to become root (avoid using sudo your-token).
-
-   sudo su
    <your-token --v=5>
 
 
-## Verify Cluster Connection
+===============================================================Verify Cluster Connection===============================================================================
 
 **On Master Node:**
 
-
 kubectl get nodes
 
-## Optional: Labeling Nodes
-
-If you want to label worker nodes, you can use the following command:
-
-
-kubectl label node <node-name> node-role.kubernetes.io/worker=worker
+==================================================================================================================================================================
 
 
